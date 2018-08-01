@@ -1,0 +1,226 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Globals:
+  Function:
+    Handler: index.handler
+    Runtime: nodejs8.10
+    Timeout: 15
+Parameters:
+  LambdaArn:
+    Default: arn:aws:iam::004590054840:role/madori_lambda_role
+    Type: String
+  StageParam:
+    Default: test
+    Type: String
+Resources:
+  CheckCapacity:
+    Properties:
+      AutoPublishAlias:
+        Ref: StageParam
+      CodeUri: s3://madori-cloud-code/ad06b71ffa5c4effedba872134b93062
+      Environment:
+        Variables:
+          BASIC_CAPACITY: 1MB
+          BUCKET_NAME: madori-cloud-user-storage-test
+          BUSINESS_CAPACITY: 2MB
+          TZ: Asia/Tokyo
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          WARNING_LIMIT: 0.9
+      Events:
+        Api:
+          Properties:
+            Method: get
+            Path: /storage/status
+            RestApiId:
+              Ref: MadoriApi
+          Type: Api
+      FunctionName: CheckCapacity
+      Role:
+        Ref: LambdaArn
+    Type: AWS::Serverless::Function
+  CloudwatchRoleSetting:
+    Properties:
+      CloudWatchRoleArn: arn:aws:iam::004590054840:role/apigateway_cloudwatchlogs_role
+    Type: AWS::ApiGateway::Account
+  CreatePresigndUrl:
+    Properties:
+      AutoPublishAlias:
+        Ref: StageParam
+      CodeUri: s3://madori-cloud-code/d8eb05ee77d0a7c1a3b0b562a955f073
+      Environment:
+        Variables:
+          S3_BUCKET: madori-cloud-system-storage-test
+          SETTING_PAGE_PATH: html/index.html
+          TZ: Asia/Tokyo
+      Events:
+        Api:
+          Properties:
+            Method: get
+            Path: /settings/url
+            RestApiId:
+              Ref: MadoriApi
+          Type: Api
+      FunctionName: CreatePresigndUrl
+      Role:
+        Ref: LambdaArn
+    Type: AWS::Serverless::Function
+  CreateUploadUrl:
+    Properties:
+      AutoPublishAlias:
+        Ref: StageParam
+      CodeUri: s3://madori-cloud-code/b7ebf597d48df82c8f03efe4b17dc69e
+      Environment:
+        Variables:
+          S3_BUCKET: madori-cloud-user-storage-test
+          TZ: Asia/Tokyo
+      Events:
+        Api:
+          Properties:
+            Method: get
+            Path: /upload/url
+            RestApiId:
+              Ref: MadoriApi
+          Type: Api
+      FunctionName: CreateUploadUrl
+      Role:
+        Ref: LambdaArn
+    Type: AWS::Serverless::Function
+  MadoriApi:
+    Properties:
+      DefinitionUri: s3://madori-cloud-code/24550ae618db9ad79f43bb2c33a4225a
+      MethodSettings:
+      - DataTraceEnabled: true
+        HttpMethod: '*'
+        LoggingLevel: ERROR
+        ResourcePath: /*
+      Name: madori-test
+      StageName:
+        Ref: StageParam
+      Variables:
+        Stage:
+          Ref: StageParam
+    Type: AWS::Serverless::Api
+  MadoriBucket:
+    Properties:
+      BucketName: madori-cloud-user-storage-test
+    Type: AWS::S3::Bucket
+  RefleshToken:
+    Properties:
+      AutoPublishAlias:
+        Ref: StageParam
+      CodeUri: s3://madori-cloud-code/8c576f873f8f96a2920a12d8a6c8baf3
+      Environment:
+        Variables:
+          CLIENT_ID: 5umtouvrd4l49c9va2hg0h9j5s
+          TZ: Asia/Tokyo
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          WEB_AUTH_URL: https://kanri.madori.co.jp/auth/auth.php
+      Events:
+        Api:
+          Properties:
+            Method: get
+            Path: /auth/reflesh
+            RestApiId:
+              Ref: MadoriApi
+          Type: Api
+      FunctionName: RefleshToken
+      Role:
+        Ref: LambdaArn
+    Type: AWS::Serverless::Function
+  S3CreateEvent:
+    Properties:
+      CodeUri: s3://madori-cloud-code/4cdf3c30d1e1ac6848b1bd5848b05011
+      Environment:
+        Variables:
+          MADORI_BUCKET: madori-cloud-user-storage-test
+          TABLE_NAME: madori-files-test
+          THUMBNAIL_BUCKET: madori-cloud-user-storage-test
+          THUMBNAIL_FILE_NAME: zumen.jpg
+          TZ: Asia/Tokyo
+      Events:
+        S3Put:
+          Properties:
+            Bucket:
+              Ref: MadoriBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                - Name: suffix
+                  Value: .mdzx
+          Type: S3
+      FunctionName: S3CreateEvent
+      Role:
+        Ref: LambdaArn
+    Type: AWS::Serverless::Function
+  S3DeleteEvent:
+    Properties:
+      CodeUri: s3://madori-cloud-code/bd36c323d80ffe3858ef25d903f7be09
+      Environment:
+        Variables:
+          S3_BUCKET: madori-cloud-user-storage-test
+          TABLE_NAME: madori-files-test
+          TZ: Asia/Tokyo
+      Events:
+        S3Put:
+          Properties:
+            Bucket:
+              Ref: MadoriBucket
+            Events: s3:ObjectRemoved:*
+            Filter:
+              S3Key:
+                Rules:
+                - Name: suffix
+                  Value: .mdzx
+          Type: S3
+      FunctionName: S3DeleteEvent
+      Role:
+        Ref: LambdaArn
+    Type: AWS::Serverless::Function
+  SearchFiles:
+    Properties:
+      AutoPublishAlias:
+        Ref: StageParam
+      CodeUri: s3://madori-cloud-code/593f8d624debe3ee9d5c78196f3f4936
+      Environment:
+        Variables:
+          SORT_UPDATE_INDEX: user_id-latest-index
+          TABLE_NAME: madori-files-test
+          TZ: Asia/Tokyo
+      Events:
+        Api:
+          Properties:
+            Method: post
+            Path: /search/files
+            RestApiId:
+              Ref: MadoriApi
+          Type: Api
+      FunctionName: SearchFiles
+      Role:
+        Ref: LambdaArn
+    Type: AWS::Serverless::Function
+  SignIn:
+    Properties:
+      AutoPublishAlias:
+        Ref: StageParam
+      CodeUri: s3://madori-cloud-code/6d752f0342167443199e01aa39751219
+      Environment:
+        Variables:
+          CLIENT_ID: 5umtouvrd4l49c9va2hg0h9j5s
+          KEY_ID: 0022d1d9-f0c7-45e1-8f84-2b77c6fdcba9
+          PASS_KEY: madori
+          TZ: Asia/Tokyo
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          WEB_AUTH_URL: https://jnvdhrd7f0.execute-api.ap-northeast-1.amazonaws.com/prod/web-auth-test
+      Events:
+        Api:
+          Properties:
+            Method: post
+            Path: /auth/login
+            RestApiId:
+              Ref: MadoriApi
+          Type: Api
+      FunctionName: SignIn
+      Role:
+        Ref: LambdaArn
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

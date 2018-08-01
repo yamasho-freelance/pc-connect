@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Parameters: 
+    StageParam: 
+      Type: String
+      Default: test
+Resources:
+  
+  CheckCapacityApi:
+    Type: AWS::Serverless::Api
+    Properties: 
+      Name: madori-test
+      DefinitionUri: swagger.yml
+      StageName: !Ref StageParam
+      Variables:
+        Stage: !Ref StageParam
+      MethodSettings:
+      - DataTraceEnabled: true
+        LoggingLevel: 'ERROR'
+        ResourcePath: '/*'
+        HttpMethod: '*'
+
+  CreatePresigndUrl:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Timeout: 15
+      FunctionName: CreatePresigndUrl
+      CodeUri: lambda
+      Role: arn:aws:iam::032500022239:role/sam_role
+      Environment :
+        Variables:
+          S3_BUCKET: madori-web
+          TABLE_NAME: madori_files
+          STAGE: prod
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /upload/url
+            Method: get
+            RestApiId: !Ref CheckCapacityApi

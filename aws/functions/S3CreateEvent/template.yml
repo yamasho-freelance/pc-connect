@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  PickThumbnail:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Timeout: 60
+      FunctionName: PickThumbnail
+      CodeUri: lambda
+      Role: arn:aws:iam::032500022239:role/sam_role
+      Environment :
+        Variables:
+          MADORI_BUCKET: madori-web
+          THUMBNAIL_BUCKET: madori-web
+          THUMBNAIL_FILE_NAME: zumen.jpg
+          STAGE: prod
+          TZ: Asia/Tokyo

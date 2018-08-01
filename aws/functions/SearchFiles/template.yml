@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  SerachFiles:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Timeout: 60
+      FunctionName: SerachFiles
+      CodeUri: src
+      Role: arn:aws:iam::032500022239:role/sam_role
+      Environment :
+        Variables:
+          TABLE_NAME: madori-files-test
+          SORT_UPADTE_INDEX: user_id-latest-index 
+          TZ: Asia/Tokyo

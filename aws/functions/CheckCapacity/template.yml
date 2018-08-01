@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters: 
+  StageParam: 
+    Type: String
+    Default: test
+   
+Resources:
+ 
+  CheckCapacityApi:
+    Type: AWS::Serverless::Api
+    Properties: 
+      Name: madori-test
+      DefinitionUri: swagger.yml
+      StageName: test
+      Variables:
+        Stage: test
+      MethodSettings:
+      - DataTraceEnabled: true
+        LoggingLevel: 'ERROR'
+        ResourcePath: '/*'
+        HttpMethod: '*'
+
+  CheckCapacity:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Timeout: 30
+      Runtime: nodejs8.10
+      FunctionName: CheckCapacity
+      CodeUri: lambda
+      AutoPublishAlias: test
+      Role: arn:aws:iam::032500022239:role/sam_role 
+      # Policies:
+      #   ApiGatewayPolicy:
+      #     Version: "2012-10-17"
+      #     Id: default
+      #     Statement:
+      #       Sid: 0000000000000000aa
+      #       Effect: Allow
+      #       Principal:
+      #         Service: 
+      #         - apigateway.amazonaws.com
+      #       Action: lambda:InvokeFunction
+      #       Resource: arn:aws:lambda:ap-northeast-1:032500022239:function:CheckCapacity:test
+      #       Condition:
+      #         ArnLike:
+      #           AWS:SourceArn: arn:aws:execute-api:ap-northeast-1:032500022239:w4weexbjqk/test/*/GET/storage/status
+      Environment :
+        Variables:
+          BUCKET_NAME: madori-web
+          BASIC_CAPACITY: 10B
+          BUSINESS_CAPACITY: 2.3MB
+          WARNING_LIMIT: 0.9 
+          USER_POOL_ID: ap-northeast-1_srHUAjtc2
+          TZ: Asia/Tokyo
+          AA: AAA
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /storage/status
+            Method: get
+            RestApiId: !Ref CheckCapacityApi
+
+    
+  # CheckCapacityApiPermissiontest:
+  #   Type: 'AWS::Lambda::Permission'
+  #   DependsOn:
+  #   - CheckCapacityApi
+  #   - CheckCapacity
+  #   Properties:
+  #     Action: 'lambda:invokeFunction'
+  #     Principal: apigateway.amazonaws.com
+  #     FunctionName: !Sub 
+  #       - >-
+  #          arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CheckCapacity:${__Stage__}
+  #       -  __Stage__ : test
+  #     SourceArn: !Sub 
+  #       - >-
+  #         arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/GET/storage/status
+  #       - __Stage__: test
+  #         __ApiId__: !Ref CheckCapacityApi

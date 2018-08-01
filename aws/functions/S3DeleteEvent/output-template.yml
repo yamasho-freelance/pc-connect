@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  DeleteFileMeta:
+    Properties:
+      CodeUri: s3://codes-pc-connect/bd36c323d80ffe3858ef25d903f7be09
+      Environment:
+        Variables:
+          S3_BUCKET: madori-web
+          STAGE: prod
+          TABLE_NAME: madori_files
+          TZ: Asia/Tokyo
+      FunctionName: DeleteFileMeta
+      Handler: index.handler
+      Role: arn:aws:iam::032500022239:role/sam_role
+      Runtime: nodejs8.10
+      Timeout: 60
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

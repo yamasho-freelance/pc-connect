@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  singIn:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Timeout: 15
+      Runtime: nodejs8.10
+      FunctionName: singIn
+      CodeUri: lambda
+      Role: arn:aws:iam::032500022239:role/sam_role      
+      Environment :
+        Variables:
+          KEY_ID: 93bc2dde-6218-4d49-a700-6f17f4b275da
+          WEB_AUTH_URL: https://jnvdhrd7f0.execute-api.ap-northeast-1.amazonaws.com/prod/web-auth-test
+          USER_POOL_ID: ap-northeast-1_srHUAjtc2
+          CLIENT_ID: 14hg9uas2k1dlffrr9ot02pvkt
+          PASS_KEY: madori
+          STAGE: prod
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /photos
+            Method: post

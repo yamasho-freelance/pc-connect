@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  StageParam:
+    Default: test
+    Type: String
+Resources:
+  CheckCapacity:
+    Properties:
+      AutoPublishAlias: test
+      CodeUri: s3://codes-pc-connect/ab640c5387eabcdd1fed2572049b031f
+      Environment:
+        Variables:
+          AA: AAA
+          BASIC_CAPACITY: 10B
+          BUCKET_NAME: madori-web
+          BUSINESS_CAPACITY: 2.3MB
+          TZ: Asia/Tokyo
+          USER_POOL_ID: ap-northeast-1_srHUAjtc2
+          WARNING_LIMIT: 0.9
+      Events:
+        Api:
+          Properties:
+            Method: get
+            Path: /storage/status
+            RestApiId:
+              Ref: CheckCapacityApi
+          Type: Api
+      FunctionName: CheckCapacity
+      Handler: index.handler
+      Role: arn:aws:iam::032500022239:role/sam_role
+      Runtime: nodejs8.10
+      Timeout: 30
+    Type: AWS::Serverless::Function
+  CheckCapacityApi:
+    Properties:
+      DefinitionUri: s3://codes-pc-connect/b5d235090f7b6793de3cbff182956f4f
+      MethodSettings:
+      - DataTraceEnabled: true
+        HttpMethod: '*'
+        LoggingLevel: ERROR
+        ResourcePath: /*
+      Name: madori-test
+      StageName: test
+      Variables:
+        Stage: test
+    Type: AWS::Serverless::Api
+Transform: AWS::Serverless-2016-10-31

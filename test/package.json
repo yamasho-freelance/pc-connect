@@ -1,0 +1,27 @@
+{
+  "name": "sites",
+  "version": "1.0.0",
+  "description": "",
+  "main": "aws-sdk-2.244.1.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "amazon-cognito-identity-js": "^2.0.6",
+    "aws-amplify": "^0.4.1",
+    "aws-sdk": "^2.255.1",
+    "aws-signature-v4": "^1.2.1",
+    "request": "^2.87.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.4",
+    "babel-preset-env": "^1.7.0",
+    "ts-loader": "^4.3.0",
+    "typescript": "^2.8.3",
+    "webpack": "^4.8.3",
+    "webpack-cli": "^2.1.3"
+  }
+}

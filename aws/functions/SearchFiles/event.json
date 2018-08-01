@@ -1,0 +1,18 @@
+{
+    "userid": "18234",
+    "keywords": [
+        "madori"
+    ],
+    "users": [
+        "takemoto",
+        "yamasho"
+    ],
+    "sort": "latest",
+    "sortDirection": "desc",
+    "offsetKey": {
+        "user_id": "18234",
+        "filepath": "takemoto/madori244.mdzx",
+        "latest": "20171222020736"
+    },
+    "limit": 100
+}

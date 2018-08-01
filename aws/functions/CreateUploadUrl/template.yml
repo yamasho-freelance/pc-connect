@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  createPresigndPostFunc:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs8.10
+      FunctionName: createPresigndURL
+      CodeUri: lambda
+      Role: arn:aws:iam::032500022239:role/sam_role      
+      Environment :
+        Variables:
+          S3_BUCKET: madori_web
+          STAGE: prod
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /photos
+            Method: post

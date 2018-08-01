@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  createPresigndPostFunc:
+    Properties:
+      CodeUri: s3://codes-pc-connect/5320e725a5c18946f31caebfaabb3180
+      Environment:
+        Variables:
+          S3_BUCKET: madori_web
+          STAGE: prod
+          TZ: Asia/Tokyo
+      FunctionName: createPresigndURL
+      Handler: index.handler
+      Role: arn:aws:iam::032500022239:role/sam_role
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31
