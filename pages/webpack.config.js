@@ -7,7 +7,7 @@ module.exports = {
     devtool: 'inline-source-map',
    
     // メインとなるJavaScriptファイル（エントリーポイント）
-    entry: ['babel-polyfill', './src/components/index.js'],
+    entry: ['babel-polyfill', './src/index.js'],
 
     output: {
         // 出力するファイル名
@@ -35,7 +35,8 @@ module.exports = {
                   // webpack の Tree Shaking 機能が使えない
                   ['env', {'modules': false}],
                   // React の JSX を解釈
-                  'react'
+                  'react',
+                  'stage-2'
                 ]
               }
             }

@@ -5,20 +5,6 @@ Parameters:
       Type: String
       Default: test
 Resources:
-  
-  CheckCapacityApi:
-    Type: AWS::Serverless::Api
-    Properties: 
-      Name: madori-test
-      DefinitionUri: swagger.yml
-      StageName: !Ref StageParam
-      Variables:
-        Stage: !Ref StageParam
-      MethodSettings:
-      - DataTraceEnabled: true
-        LoggingLevel: 'ERROR'
-        ResourcePath: '/*'
-        HttpMethod: '*'
 
   CreatePresigndUrl:
     Type: 'AWS::Serverless::Function'
@@ -27,18 +13,12 @@ Resources:
       Runtime: nodejs8.10
       Timeout: 15
       FunctionName: CreatePresigndUrl
-      CodeUri: lambda
+      CodeUri: src
       Role: arn:aws:iam::032500022239:role/sam_role
       Environment :
         Variables:
-          S3_BUCKET: madori-web
-          TABLE_NAME: madori_files
+          S3_BUCKET: madori.cloud
+          SETTING_PAGE_PATH: dest/index.html
           STAGE: prod
           TZ: Asia/Tokyo
-      Events: 
-        Api: 
-          Type: Api
-          Properties:
-            Path: /upload/url
-            Method: get
-            RestApiId: !Ref CheckCapacityApi
+

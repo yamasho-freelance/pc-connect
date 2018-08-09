@@ -12,7 +12,7 @@ namespace c_
 {
     class Program
     {
-        static void Main(string[] args)
+        static void aa(string[] args)
         {
 
             var method = "POST";

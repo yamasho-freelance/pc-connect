@@ -14,7 +14,7 @@ module.exports.handler = async (event) => {
 
     //認証IDと暗号化された認証IDの妥当性をチェック
     var isValit = await isValidAuthId(event.authId, event.encryptAuthId).catch((err) => {
-        throw new error.GeneralSrverError(err,"Authentication ID Invalid");
+        throw new error.GeneralSrverError(err, "Authentication ID Invalid");
     });
     if (!isValit) {
         throw (new error.MadoriError("hash does not match id"));
@@ -25,33 +25,33 @@ module.exports.handler = async (event) => {
         if (err.code == "ENOTFOUND") {
             throw new error.MadoriError("Could not connect to authentication server");
         } else {
-            throw new error.GeneralSrverError(err,"authentication server error");
+            throw new error.GeneralSrverError(err, "authentication server error");
         }
     });
-    if (plan.STATE == "NG") {
+    if (plan.STATE == "NG" && Number(plan.BSCONT) == 0 && Number(plan.BNCONT) == 0) {
         throw new error.MadoriError("Authentication with the web authentication server failed. Invalid authentication ID.");
     }
 
     var cog = new aws.CognitoIdentityServiceProvider();
     var userName = event.authId.split("-")[0];
     var user = await getUser(userName).catch((err) => {
-        throw new error.GeneralSrverError(err,"Failure getUser");
+        throw new error.GeneralSrverError(err, "Failure getUser");
     });
 
     if (!user) {
         user = await createUser(userName).catch((err) => {
-            throw new error.GeneralSrverError(err,"Failure createUser");
+            throw new error.GeneralSrverError(err, "Failure createUser");
         });
     }
 
-    var pass = await createPassWord(userName).catch((err) => {  throw new error.GeneralSrverError(err,"Failure createPassWord"); });
+    var pass = await createPassWord(userName).catch((err) => { throw new error.GeneralSrverError(err, "Failure createPassWord"); });
 
     var response = await signIn(user, pass).catch((err) => {
-        throw new error.GeneralSrverError(err,"Failure signIn");
+        throw new error.GeneralSrverError(err, "Failure signIn");
     });
 
     await setPlan(plan, userName).catch((err) => {
-        throw new error.GeneralSrverError(err,"Failure setPlan");
+        throw new error.GeneralSrverError(err, "Failure setPlan");
     });
 
     return response;
@@ -203,7 +203,7 @@ module.exports.handler = async (event) => {
                 UserPoolId: process.env.USER_POOL_ID,
                 Username: username
             };
-
+            console.log(params);
             cog.adminUpdateUserAttributes(params, (err, data) => {
                 if (err) {
                     reject(err);
@@ -229,8 +229,6 @@ module.exports.handler = async (event) => {
     async function isValidAuthId(plainAuthId, encryptAuthId) {
 
         return kmsUtil.authIdValidate(plainAuthId, encryptAuthId);
-
-        console.log(result);
     }
     async function createPassWord(username) {
 

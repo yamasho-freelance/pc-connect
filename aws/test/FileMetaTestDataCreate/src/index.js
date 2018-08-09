@@ -11,8 +11,9 @@ var dynamo = new aws.DynamoDB.DocumentClient();
 module.exports.handler = async (event) => {
 
     var taskList = [];
+    var filenames = ["グランデージ都島", "ルネサンス東京", "ルミエール山本", "リーガルスイート本町"];
 
-    for (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 300; i++) {
 
         var randomKey = createRandamData(i);
         console.log("create: " + randomKey);
@@ -32,37 +33,6 @@ module.exports.handler = async (event) => {
 
     }
 
-
-    function getFileMeta(userid, filepath) {
-
-        return new Promise((resolve, reject) => {
-
-            console.log("koko");
-            var params = {
-                TableName: process.env.TABLE_NAME,
-                Key: {
-                    "user_id": userid,
-                    "filepath": filepath
-                }
-            };
-
-            dynamo.get(params, (err, data) => {
-                if (err) {
-
-                    console.log(err);
-                    reject(err);
-                } else {
-                    console.log(data);
-                    if (Object.keys(data).length == 0) {
-                        resolve(null);
-                    } else {
-                        resolve(data);
-                    }
-                }
-            });
-        });
-    }
-
     function putFileMeta(fileMeta) {
 
         return new Promise((resolve, reject) => {
@@ -73,11 +43,16 @@ module.exports.handler = async (event) => {
                     "user_id": fileMeta.userid,
                     "filepath": fileMeta.path,
                     "username": fileMeta.user,
-                    "filesize": fileMeta.size,
+                    "size": fileMeta.size,
                     "latest": fileMeta.timestamp,
+                    "filename": fileMeta.filename,
                     "ext": fileMeta.ext
                 }
             };
+
+            if (fileMeta.version) {
+                params.Item.version = fileMeta.version;
+            }
 
             dynamo.put(params, (err, data) => {
                 if (err) {
@@ -115,6 +90,21 @@ module.exports.handler = async (event) => {
         result.size = getRandomInt(5000000, 20000000);
         result.path = keyArray.join("/");
 
+
+        var versionCount = getRandomInt(0, 3);
+        if (versionCount > 0) {
+            result.version = [];
+            for (var i = 0; i <= versionCount; i++) {
+                var date = new Date();
+                date.setMonth(-12);
+                date.setDate(getRandomInt(0, 182));
+                result.version.push({
+                    size: getRandomInt(5000000, 20000000),
+                    timestamp: date.toFormat("YYYYMMDDHH24MISS")
+                });
+            }
+        }
+
         console.log(result);
 
         return result;
@@ -124,11 +114,11 @@ module.exports.handler = async (event) => {
 
     function createRandamData(i) {
         var date = new Date();
-        date.setMonth(-12);
-        date.setDate(getRandomInt(0, 364));
+        date.setMonth(-6);
+        date.setDate(getRandomInt(0, 182));
         return event.userid
             + "/" + event.userName[getRandomInt(0, event.userName.length - 1)]
-            + "/" + event.fileBaseName + getRandomInt(0, 10000)
+            + "/" + filenames[getRandomInt(0, filenames.length)] + getRandomInt(0, 10000)
             + "_" + date.toFormat("YYYYMMDDHH24MISS") + event.ext;
     }
 

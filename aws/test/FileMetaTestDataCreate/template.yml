@@ -12,7 +12,7 @@ Resources:
       Role: arn:aws:iam::032500022239:role/sam_role
       Environment :
         Variables:
-          TABLE_NAME: madori-files-test
+          TABLE_NAME: madori-files-test2
           THUMBNAIL_BUCKET: madori-web
           THUMBNAIL_FILE_NAME: zumen.jpg
           STAGE: prod

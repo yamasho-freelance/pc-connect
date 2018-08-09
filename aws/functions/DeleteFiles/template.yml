@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  DeleteFiles:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Timeout: 60
+      FunctionName: DeleteFiles
+      CodeUri: src
+      Role: arn:aws:iam::004590054840:role/madori_lambda_role
+      Environment :
+        Variables:
+          MADORIDATA_BUCKET_NAME: madori-cloud-user-storage-test
+          THUMBNAIL_BUCKET_NAME: madori-cloud-system-storage-test
+          TABLE_NAME: madori-files-test2
+          TZ: Asia/Tokyo

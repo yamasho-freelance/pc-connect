@@ -11,21 +11,22 @@ module.exports.handler = async (event) => {
 
     var taskList = [];
     var item = event.Records[0];
+    var decodeKey = decodeURI(item.s3.object.key);
+    console.log(decodeKey);
 
-    taskList.push(pickThumbnail(item));
-    taskList.push(saveFileMeta(item));
+    taskList.push(pickThumbnail(decodeKey));
+    taskList.push(saveFileMeta(decodeKey, item.s3.object.size));
 
-    await Promise.all(taskList).then(()=>{
+    await Promise.all(taskList).then(() => {
         return true;
-    }).catch((err)=>{
-        throw(err);
+    }).catch((err) => {
+        throw (err);
     });
 
 };
 
-async function saveFileMeta(item) {
-    var key = item.s3.object.key;
-    var fileObj = createMadoriFileObject(key);
+async function saveFileMeta(key, size) {
+    var fileObj = createMadoriFileObject(key, size);
     var file = await getFileMeta(fileObj.userid, fileObj.path);
 
     var result = null;
@@ -33,7 +34,8 @@ async function saveFileMeta(item) {
     if (!file) {
         result = putFileMeta(fileObj)
     } else {
-        result = updateFileMeta(fileObj);
+        console.log(file)
+        result = updateFileMeta(fileObj, file.Item);
     }
     return result;
 }
@@ -77,8 +79,11 @@ function putFileMeta(fileMeta) {
             Item: {
                 "user_id": fileMeta.userid,
                 "filepath": fileMeta.path,
-                "version": new Array(fileMeta.timestamp),
-                "ext": fileMeta.ext
+                "ext": fileMeta.ext,
+                "latest": fileMeta.timestamp,
+                "size": fileMeta.size,
+                "filename": fileMeta.filename,
+                "username": fileMeta.user
             }
         };
 
@@ -86,13 +91,15 @@ function putFileMeta(fileMeta) {
             if (err) {
                 reject(err);
             } else {
+
+                console.log(data);
                 resolve(data);
             }
         });
     });
 }
 
-function updateFileMeta(fileMeta) {
+function updateFileMeta(fileMeta, oldFileMeta) {
 
     return new Promise((resolve, reject) => {
         var params = {
@@ -102,18 +109,32 @@ function updateFileMeta(fileMeta) {
                 "filepath": fileMeta.path
             },
             ExpressionAttributeNames: {
-                '#version': 'version'
+                '#version': 'version',
+                '#latest': 'latest',
+                '#size': 'size',
             },
             ExpressionAttributeValues: {
-                ':version': [fileMeta.timestamp]
+                ':version': [{ "size": oldFileMeta.size, "timestamp": oldFileMeta.latest }],
+                ':latest': fileMeta.timestamp,
+                ':size': fileMeta.size
             },
-            UpdateExpression: 'SET #version = list_append(#version, :version)'
+
         };
+        if (!oldFileMeta.version) {
+            params.UpdateExpression = 'SET #version = :version'
+        } else {
+            params.UpdateExpression = 'SET #version = list_append(#version, :version)'
+        }
+
+        params.UpdateExpression += ", #latest=:latest , #size = :size";
 
         dynamo.update(params, (err, data) => {
             if (err) {
                 reject(err);
             } else {
+
+                console.log("kokokokokko");
+                console.log(data);
                 resolve(data);
             }
         });
@@ -124,7 +145,7 @@ function updateFileMeta(fileMeta) {
 
 
 
-function createMadoriFileObject(key) {
+function createMadoriFileObject(key, size) {
 
     var result = {};
 
@@ -133,8 +154,8 @@ function createMadoriFileObject(key) {
     var filenameAndTimeStamp = keyArray.pop();
 
     var filenameArray = filenameAndTimeStamp.split("_");
-    var filename = filenameArray.shift();
     var timestampAndExt = filenameArray.pop().split(".");
+    var filename = filenameArray.join("_");
     var timestamp = timestampAndExt.shift();
     var ext = timestampAndExt.pop();
 
@@ -145,6 +166,8 @@ function createMadoriFileObject(key) {
     result.timestamp = timestamp;
     result.ext = ext;
     result.path = keyArray.join("/");
+    result.size = size;
+    result.user = keyArray[0];
 
     console.log(result);
 
@@ -155,8 +178,7 @@ function createMadoriFileObject(key) {
 
 
 
-async function pickThumbnail(item) {
-    var key = item.s3.object.key;
+async function pickThumbnail(key) {
 
     var file = await getFile(key);
     var thumbKey = key.replace(".mdzx", ".jpg");
@@ -213,7 +235,9 @@ function uploadS3(stream, key) {
         var params = {
             "Bucket": process.env.THUMBNAIL_BUCKET,
             "Key": key,
-            "Body": stream
+            "Body": stream,
+            "ACL": "public-read",
+            "ContentType": "image/jpg"
         }
 
         s3.putObject(params, (err, data) => {

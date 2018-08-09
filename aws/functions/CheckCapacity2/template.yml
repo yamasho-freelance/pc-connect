@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters: 
+  StageParam: 
+    Type: String
+    Default: test
+   
+Resources:
+ 
+
+  CheckCapacity2:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Timeout: 30
+      Runtime: nodejs8.10
+      FunctionName: CheckCapacity2
+      CodeUri: src
+      AutoPublishAlias: test
+      Role: arn:aws:iam::032500022239:role/sam_role
+      Environment :
+        Variables:
+          BUCKET_NAME: madori-cloud-user-storage-test
+          BASIC_CAPACITY: 10B
+          BUSINESS_CAPACITY: 2.3MB
+          WARNING_LIMIT: 0.9 
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          TZ: Asia/Tokyo
+          AA: AAA

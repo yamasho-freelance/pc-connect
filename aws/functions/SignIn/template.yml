@@ -13,7 +13,7 @@ Resources:
       Environment :
         Variables:
           KEY_ID: 93bc2dde-6218-4d49-a700-6f17f4b275da
-          WEB_AUTH_URL: https://jnvdhrd7f0.execute-api.ap-northeast-1.amazonaws.com/prod/web-auth-test
+          WEB_AUTH_URL: https://kanri.madori.co.jp/auth/auth.php
           USER_POOL_ID: ap-northeast-1_srHUAjtc2
           CLIENT_ID: 14hg9uas2k1dlffrr9ot02pvkt
           PASS_KEY: madori

@@ -22,12 +22,13 @@ module.exports.handler = async (event) => {
 
     console.log("totalCapacity =" + capacity);
 
-    var size = await getSize(username).catch((err)=>{
+    var size = await getSize(username).catch((err) => {
         throw new error.GeneralSrverError(err, "Failure Get total size Of Bucket");
     });
 
     var useRate = size / capacity;
 
+    console.log("useSize=" + size);
     console.log("useRate =" + useRate);
 
     var status = "allow";
@@ -35,13 +36,18 @@ module.exports.handler = async (event) => {
     if (useRate > 1) {
         status = "deny";
     } else if (useRate > Number(process.env.WARNING_LIMIT)) {
-        status = "warining"
+        status = "warning"
     }
     else {
         status = "allow";
     }
 
-    var res = { "status": status ,"useRate":Math.floor(useRate * 10) / 10}
+    var res = {
+        "status": status,
+        "useRate": Math.floor(useRate * 100) / 100,
+        "capacity": capacity,
+        "totalSize": size
+    }
 
     return res;
 
@@ -65,10 +71,10 @@ module.exports.handler = async (event) => {
 
                     data.Contents.forEach((item) => {
                         size += item.Size;
+                        console.log(item);
                     });
 
                     if (data.IsTruncated) {
-                        console.log(data.NextContinuationToken);
                         size = await getSize(username, data.NextContinuationToken, size);
                     }
                     resolve(size);

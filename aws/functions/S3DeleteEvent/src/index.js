@@ -7,106 +7,65 @@ var dynamo = new aws.DynamoDB.DocumentClient();
 
 module.exports.handler = async (event) => {
 
-    var item = event.Records[0];
-    var key = item.s3.object.key;
-    var fileObj = createMadoriFileObject(key);
-    var fileMeta = await getFileMeta(fileObj.userid, fileObj.path);
+    var fileObjList = [];
 
-    var result = null;
-    var index = fileMeta.version.indexOf(fileObj.timestamp);
+    for (var i in event.Records) {
+        fileObjList.push(createMadoriFileObject(event.Records[i].s3.object.key));
+    }
 
-    if (index == -1) {
-        throw ("存在しないバージョンのファイルを削除しようとしました");
-    }
-    else if (fileMeta.version.length == 1) {
-        result = deleteFileMeta(fileObj)
-    } else {
-        result = removeFileVersion(fileObj, index);
-    }
-    return result;
+    var filePathList = [];
+    fileObjList.forEach(fileObj => {
+        var path = fileObj.userid + "/" + fileObj.username;
+        if (filePathList.indexOf(path) == -1) {
+            filePathList.push(path);
+        }
+    });
+
+    var task = [];
+    filePathList.forEach(path => { task.push(deleteEmptyFolder(path)) });
+
+    Promise.all(task).then(() => {
+        return;
+    }).catch(err => {
+        throw err;
+    })
 
 
 };
 
-function getFileMeta(userid, filepath) {
-
+function deleteEmptyFolder(path) {
     return new Promise((resolve, reject) => {
 
-        console.log("koko");
         var params = {
-            TableName: process.env.TABLE_NAME,
-            Key: {
-                "user_id": userid,
-                "filepath": filepath
-            }
-        };
+            Bucket: process.env.BUCKET_NAME,
+            Prefix: path
+        }
 
-        dynamo.get(params, (err, data) => {
+        s3.listObjectsV2(params, (err, data) => {
             if (err) {
-
-                console.log(err);
                 reject(err);
             } else {
-                console.log(data);
-                if (Object.keys(data).length == 0) {
-                    resolve(null);
+                if (data.Contents.length == 0) {
+                    var deleteParams = {
+                        Bucket: process.env.BUCKET_NAME,
+                        Key: path
+                    }
+
+                    s3.deleteObject(deleteParams, (err, data) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(data);
+                        }
+                    })
+
                 } else {
-                    resolve(data.Item);
+                    resolve();
                 }
             }
-        });
-    });
+        })
+    })
 }
-
-function deleteFileMeta(fileMeta) {
-
-    return new Promise((resolve, reject) => {
-        var params = {
-            TableName: process.env.TABLE_NAME,
-            Key: {
-                "user_id": fileMeta.userid,
-                "filepath": fileMeta.path
-            }
-        };
-
-        dynamo.delete(params, (err, data) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(data);
-            }
-        });
-    });
-}
-
-function removeFileVersion(fileMeta, removeIndex) {
-
-    return new Promise((resolve, reject) => {
-        var params = {
-            TableName: process.env.TABLE_NAME,
-            Key: {
-                "user_id": fileMeta.userid,
-                "filepath": fileMeta.path
-            },
-            ExpressionAttributeNames: {
-                '#version': 'version'
-            },
-            UpdateExpression: 'REMOVE #version[' + removeIndex + ']'
-        };
-
-        dynamo.update(params, (err, data) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(data);
-            }
-        });
-
-    });
-
-}
-
-
 
 function createMadoriFileObject(key) {
 
@@ -125,6 +84,7 @@ function createMadoriFileObject(key) {
     keyArray.push(filename + "." + ext);
 
     result.userid = userid;
+    result.username = keyArray[0];
     result.filename = filename;
     result.timestamp = timestamp;
     result.ext = ext;

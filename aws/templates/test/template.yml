@@ -10,7 +10,7 @@ Parameters:
    
 Globals:
     Function:
-      Timeout: 15
+      Timeout: 60
       Runtime: nodejs8.10
       Handler: index.handler
       
@@ -49,8 +49,11 @@ Resources:
       AutoPublishAlias: !Ref StageParam
       Environment :
          Variables:
-          TABLE_NAME: madori-files-test
-          SORT_UPDATE_INDEX: user_id-latest-index 
+          TABLE_NAME: madori-files-test2
+          LATEST_INDEX: latest-index
+          USERNAME_INDEX: username-index
+          FILENAME_INDEX : filename-index
+          SIZE_INDEX : size-index 
           TZ: Asia/Tokyo
       Events: 
         Api: 
@@ -70,8 +73,8 @@ Resources:
       Environment :
         Variables:
           BUCKET_NAME: madori-cloud-user-storage-test
-          BASIC_CAPACITY: 1MB
-          BUSINESS_CAPACITY: 2MB
+          BASIC_CAPACITY: 50MB
+          BUSINESS_CAPACITY: 100MB
           WARNING_LIMIT: 0.9 
           USER_POOL_ID: ap-northeast-1_rGf8HWsVW
           TZ: Asia/Tokyo
@@ -80,6 +83,30 @@ Resources:
           Type: Api
           Properties:
             Path: /storage/status
+            Method: get
+            RestApiId: !Ref MadoriApi
+
+  
+  CheckCapacity2:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: CheckCapacity2
+      CodeUri: ../../functions/CheckCapacity2/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          BUCKET_NAME: madori-cloud-user-storage-test
+          BASIC_CAPACITY: 50MB
+          BUSINESS_CAPACITY: 100MB
+          WARNING_LIMIT: 0.9 
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /storage/status2
             Method: get
             RestApiId: !Ref MadoriApi
 
@@ -92,8 +119,8 @@ Resources:
       AutoPublishAlias: !Ref StageParam
       Environment :
         Variables:
-          S3_BUCKET: madori-cloud-system-storage-test
-          SETTING_PAGE_PATH: html/index.html
+          S3_BUCKET: madori.cloud
+          SETTING_PAGE_PATH: dest/index.html
           TZ: Asia/Tokyo
       Events: 
         Api: 
@@ -132,7 +159,7 @@ Resources:
       Environment :
         Variables:
           KEY_ID: 0022d1d9-f0c7-45e1-8f84-2b77c6fdcba9
-          WEB_AUTH_URL: https://jnvdhrd7f0.execute-api.ap-northeast-1.amazonaws.com/prod/web-auth-test
+          WEB_AUTH_URL: https://kanri.madori.co.jp/auth/auth.php
           USER_POOL_ID: ap-northeast-1_rGf8HWsVW
           CLIENT_ID: 5umtouvrd4l49c9va2hg0h9j5s
           PASS_KEY: madori
@@ -165,6 +192,65 @@ Resources:
             Path: /auth/reflesh
             Method: get
             RestApiId: !Ref MadoriApi
+    
+  GetUsers:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: GetUsers
+      CodeUri: ../../functions/GetUsers/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          BUCKET_NAME:  madori-cloud-user-storage-test
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /storage/users
+            Method: get
+            RestApiId: !Ref MadoriApi
+
+  DeleteFiles:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: DeleteFiles
+      CodeUri: ../../functions/DeleteFiles/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          MADORIDATA_BUCKET_NAME: madori-cloud-user-storage-test
+          THUMBNAIL_BUCKET_NAME: madori-cloud-system-storage-test
+          TABLE_NAME: madori-files-test2
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /storage/files
+            Method: delete
+            RestApiId: !Ref MadoriApi
+                
+  GetDownloadUrl:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: GetDownloadUrl
+      CodeUri: ../../functions/GetDownloadUrl/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          BUCKET_NAME:  madori-cloud-user-storage-test
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /download/url
+            Method: get
+            RestApiId: !Ref MadoriApi
 
   S3CreateEvent:
     Type: 'AWS::Serverless::Function'
@@ -172,12 +258,14 @@ Resources:
       FunctionName: S3CreateEvent
       CodeUri: ../../functions/S3CreateEvent/src
       Role: !Ref LambdaArn
+      MemorySize: 512
+      Timeout: 120
       Environment :
         Variables:
           MADORI_BUCKET: madori-cloud-user-storage-test
-          THUMBNAIL_BUCKET: madori-cloud-user-storage-test
+          THUMBNAIL_BUCKET: madori-cloud-system-storage-test
           THUMBNAIL_FILE_NAME: zumen.jpg
-          TABLE_NAME: madori-files-test
+          TABLE_NAME: madori-files-test2
           TZ: Asia/Tokyo
       Events: 
         S3Put: 
@@ -191,26 +279,5 @@ Resources:
                   - Name: suffix
                     Value: '.mdzx'
 
-  S3DeleteEvent:
-    Type: 'AWS::Serverless::Function'
-    Properties:
-      FunctionName: S3DeleteEvent
-      CodeUri: ../../functions/S3DeleteEvent/src
-      Role: !Ref LambdaArn
-      Environment :
-        Variables:
-          S3_BUCKET: madori-cloud-user-storage-test
-          TABLE_NAME: madori-files-test
-          TZ: Asia/Tokyo
-      Events: 
-        S3Put: 
-          Type: S3
-          Properties:
-            Bucket: !Ref MadoriBucket
-            Events: s3:ObjectRemoved:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: suffix
-                    Value: '.mdzx'
+
       
