@@ -83,7 +83,8 @@ function putFileMeta(fileMeta) {
                 "latest": fileMeta.timestamp,
                 "size": fileMeta.size,
                 "filename": fileMeta.filename,
-                "username": fileMeta.user
+                "username": fileMeta.user,
+                "search_filename": fileMeta.filename
             }
         };
 
@@ -132,8 +133,6 @@ function updateFileMeta(fileMeta, oldFileMeta) {
             if (err) {
                 reject(err);
             } else {
-
-                console.log("kokokokokko");
                 console.log(data);
                 resolve(data);
             }

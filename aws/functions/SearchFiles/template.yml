@@ -12,6 +12,6 @@ Resources:
       Role: arn:aws:iam::032500022239:role/sam_role
       Environment :
         Variables:
-          TABLE_NAME: madori-files-test
+          TABLE_NAME: madori-files-test2
           SORT_UPADTE_INDEX: user_id-latest-index 
           TZ: Asia/Tokyo

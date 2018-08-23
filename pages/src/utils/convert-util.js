@@ -35,6 +35,14 @@ export function getUserid() {
     }
 }
 
+
+export function getHashUserid() {
+    var match = location.search.match(/hash=(.*?)(&|$)/);
+    if (match.length >= 0) {
+        return match[1];
+    }
+}
+
 function insertStr(str, index, insert) {
 
     return str.slice(0, index) + insert + str.slice(index, str.length);

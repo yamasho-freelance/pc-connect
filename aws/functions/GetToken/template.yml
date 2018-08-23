@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  singIn:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Timeout: 15
+      Runtime: nodejs8.10
+      FunctionName: singIn
+      CodeUri: src
+      Role: arn:aws:iam::032500022239:role/sam_role      
+      Environment :
+        Variables:
+          WEB_AUTH_URL: https://kanri.madori.co.jp/auth/auth.php
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          CLIENT_ID: 5umtouvrd4l49c9va2hg0h9j5s
+          PASS_KEY: madori
+          STAGE: prod
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /photos
+            Method: post

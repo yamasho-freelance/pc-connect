@@ -10,40 +10,38 @@ import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
 import { Sticky } from "react-sticky"
 import Snackbar from '@material-ui/core/Snackbar';
-import Tooltip from '@material-ui/core/Tooltip';
 import Button from '@material-ui/core/Button';
 import DownIcon from '@material-ui/icons/KeyboardArrowDown';
 import Popover from '@material-ui/core/Popover';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListSubheader from '@material-ui/core/ListSubheader';
-import ListItemText from '@material-ui/core/ListItemText';
 import Checkbox from '@material-ui/core/Checkbox';
 import AlertDialog from './alertDialig';
 import UserIcon from '@material-ui/icons/AccountCircle';
 import InfoIcon from '@material-ui/icons/Info';
+import RefreshIcon from '@material-ui/icons/Refresh';
+import Hidden from '@material-ui/core/Hidden';
 
 import { connect } from 'react-redux';
 import { showSearchCondition, showSnackBar, showDeleteDialog, fetchFiles, setConditionUser, clearItems, allAddCondtionUsers, allRemoveCondtionUsers, getUsers, download, deleteFiles, clearSerachConditions } from '../actions/fileStrageActions';
 
-const theme = createMuiTheme({
-    palette: {
-        primary: {
-            main: "#6AC1B7",
-            contrastText: "#ffffff"
-        },
-        secondary: { main: "#517D99" }
-    },
-});
 
 
-const styles = {
+const styles = theme => ({
     root: {
         flexGrow: 1,
         backgroundColor: '#eeeeee'
     },
+    deleteButton: {
+        backgroundColor: "rgb(225, 0, 80)",
+        color: "white",
+        "&:hover": {
+            backgroundColor: "rgb(150, 0, 5)"
+        }
+    },
     bootstrapInput: {
-        backgroundColor: theme.palette.common.white,
+        backgroundColor: "white",
         fontSize: 16,
         padding: '12px 12px',
         fontFamily: [
@@ -62,20 +60,34 @@ const styles = {
     searchButton: {
         float: "right",
         "&:hover": {
-            backgroundColor: theme.palette.common.white
+            backgroundColor: "white"
         }
     },
-    searchBar: {
-        padding: "15px 0px 15px 0px",
+    leftIcon: {
+        marginRight: theme.spacing.unit,
+        fontSize: "20px"
+    },
+    rightIcon: {
+        marginLeft: theme.spacing.unit,
+        fontSize: "20px"
+    },
+    searchBarSticky: {
+        padding: "15px 0px 15px 15px",
         backgroundColor: "#eeeeee",
         zIndex: "20"
+    },
+    searchBar: {
+        padding: "15px",
     },
     listText: {
         display: "flex",
         justifyContent: "center",
         alignItems: "center"
+    },
+    base: {
+        marginLeft: "10px"
     }
-};
+});
 
 class SerachBar extends React.Component {
 
@@ -111,10 +123,10 @@ class SerachBar extends React.Component {
     searchFile() {
         var word = null;
         var value = this.searchWordRef.current.value;
+        value = value.replace(/\s+$/, "");
         if (value.length > 0) {
-            word = value.split(/\s/);
+            word = value.split(/\s+/);
         }
-        console.log(word);
         this.props.clearItems();
         this.props.fetchFiles(word, this.props.searchCondition.selectUsers, this.props.sort.name, this.props.sort.order);
     }
@@ -158,7 +170,7 @@ class SerachBar extends React.Component {
 
         return (
 
-            <div style={{ backgroundColor: "#eeeeee" }}>
+            <div >
                 <Snackbar
                     anchorOrigin={{ vertical: snackBarState.vertical, horizontal: snackBarState.horizontal }}
                     open={snackBarState.open}
@@ -174,22 +186,55 @@ class SerachBar extends React.Component {
                     onOK={event => this.deleteFile(event)}
                     okContent="削除" cancelContent="キャンセル"
                     title="選択したファイルを削除しますか？"
-                    message={"ファイルを一旦削除すると復元することはできません。\nまた、最新のデータを削除すると履歴データは全て削除されます。"}
+                    message={"ファイルを一旦削除すると復元することはできません。\n本当に削除しますか？"}
                     open={openDeleteDialog} />
                 <Sticky topOffset={70}>
-                    {({ style }) =>
+                    {({ style, isSticky }) =>
                         (
-                            <Grid style={style} className={classes.searchBar} container justify="flex-end" alignItems="center">
-                             
-                                <Grid item style={{ width: "160px" }}>
-                                    <Button onClick={e => this.clearAllConditions()} variant="outlined">
-                                        検索条件をクリア
+                            <Grid style={style} spacing={16} className={isSticky ? classes.searchBarSticky : classes.searchBar} container alignItems="center">
+                                <Grid item >
+                                    <Button variant="outlined" onClick={e => this.searchFile()}>
+                                        <RefreshIcon className={classes.leftIcon} />
+                                        更新
                                     </Button>
                                 </Grid>
-                                <Grid item style={{ width: "130px" }}>
+                                <Grid item>
+                                    <Grid container>
+                                        <Grid item xs>
+                                            <Paper>
+                                                <Grid alignItems="center" container>
+                                                    <Grid item xs>
+                                                        <TextField
+                                                            placeholder="ファイル名"
+                                                            id="bootstrap-input"
+                                                            fullWidth={true}
+                                                            InputProps={{
+                                                                disableUnderline: true,
+                                                                classes: {
+                                                                    root: classes.bootstrapRoot,
+                                                                    input: classes.bootstrapInput,
+                                                                },
+                                                            }}
+                                                            onKeyPress={e => this.handleKeyPress(e)}
+                                                            inputRef={this.searchWordRef}
+                                                        />
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <IconButton onClick={e => this.searchFile()} className={classes.searchButton} aria-label="Serach">
+                                                            <SearchIcon />
+                                                        </IconButton>
+                                                    </Grid>
+                                                </Grid>
+                                            </Paper>
+                                        </Grid>
+
+                                    </Grid>
+                                </Grid>
+
+                                <Grid item>
                                     <Button variant="outlined" onClick={event => this.showSearchCondition(event)}>
                                         検索条件
-                                         <DownIcon />
+                                         <DownIcon className={classes.rightIcon} />
                                     </Button>
                                     <Popover
                                         open={searchCondition.open}
@@ -225,50 +270,26 @@ class SerachBar extends React.Component {
                                         </List>
                                     </Popover>
                                 </Grid>
-                                <Grid item xs={6}>
-                                    <Grid container ustify="flex-end">
-                                        <Grid item xs>
-                                            <Paper>
-                                                <Grid alignItems="center" container>
-                                                    <Grid item xs>
-                                                        <TextField
-                                                            placeholder="ファイル名"
-                                                            id="bootstrap-input"
-                                                            fullWidth={true}
-                                                            InputProps={{
-                                                                disableUnderline: true,
-                                                                classes: {
-                                                                    root: classes.bootstrapRoot,
-                                                                    input: classes.bootstrapInput,
-                                                                },
-                                                            }}
-                                                            onKeyPress={e => this.handleKeyPress(e)}
-                                                            inputRef={this.searchWordRef}
-                                                        />
-                                                    </Grid>
-                                                    <Grid item style={{ width: "50px" }}>
-                                                        <IconButton onClick={e => this.searchFile()} className={classes.searchButton} aria-label="Serach">
-                                                            <SearchIcon />
-                                                        </IconButton>
-                                                    </Grid>
-                                                </Grid>
-                                            </Paper>
-                                        </Grid>
-                                        <Grid item style={{ width: "60px" }}>
-                                            <Tooltip title="削除">
-                                                <IconButton onClick={event => this.deleteClick(event)} disabled={disableDelete} style={{ margin: "0px 10px" }} className={classes.button} aria-label="Delete">
-                                                    <DeleteIcon style={{ fontSize: "32px" }} />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </Grid>
-                                        <Grid item style={{ width: "60px" }}>
-                                            <Tooltip title="ダウンロード">
-                                                <IconButton onClick={e => this.downloadClick()} disabled={disableDownload} className={classes.button} aria-label="Delete">
-                                                    <GetAppIcon style={{ fontSize: "32px" }} />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </Grid>
-                                    </Grid>
+                                <Grid item>
+                                    <Button onClick={e => this.clearAllConditions()} variant="outlined">
+                                        検索条件をクリア
+                                    </Button>
+                                </Grid>
+                                <Grid item xs />
+                                <Grid item>
+                                    <Button variant="contained" className={classes.deleteButton} onClick={event => this.deleteClick(event)} disabled={disableDelete} aria-label="Delete">
+                                        <DeleteIcon className={classes.leftIcon} />
+                                        削除
+
+                                    </Button>
+                                </Grid>
+                                <Grid item>
+                                    <Button variant="contained" color="primary" onClick={e => this.downloadClick()} disabled={disableDownload} className={classes.button} aria-label="Delete">
+
+                                        <GetAppIcon className={classes.leftIcon} />
+                                        ダウンロード
+
+                                    </Button>
                                 </Grid>
                             </Grid>
 

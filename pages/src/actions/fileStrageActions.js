@@ -1,13 +1,14 @@
 import * as types from './actionTypes';
-import * as madoriApi from './../api/madoriApi';
+import madoriApi from './../api/madoriApi';
 import * as utils from './../utils/convert-util'
 
+const madoriApiClient = new madoriApi(utils.getUserid(), utils.getHashUserid());
 
 export const fetchFiles = (keywords, users, sort, order, offsetKey) => async (dispatch) => {
 
-  var res = await madoriApi.searchFiles(utils.getUserid(), keywords, users, sort, order, offsetKey);
+  var res = await madoriApiClient.searchFiles(utils.getUserid(), keywords, users, sort, order, offsetKey);
 
-  var status = await madoriApi.getStrageStatus(utils.getUserid()).catch(err => {
+  var status = await madoriApiClient.getStrageStatus(utils.getUserid()).catch(err => {
     console.log(err);
   });
   dispatch({
@@ -114,7 +115,7 @@ export const setConditionUser = (username) => dispatch => {
 }
 
 export const getUsers = () => async (dispatch) => {
-  var users = await madoriApi.getUsers(utils.getUserid());
+  var users = await madoriApiClient.getUsers(utils.getUserid());
   dispatch({
     type: types.SET_USERS,
     users: users
@@ -124,7 +125,7 @@ export const getUsers = () => async (dispatch) => {
 export const download = (item) => async (dispatch) => {
   var key = item.key;
   console.log(key);
-  var blob = await madoriApi.getBlob(key);
+  var blob = await madoriApiClient.getBlob(key);
 
   var link = document.createElement('a');
   link.setAttribute("download", item.downloadName);
@@ -144,20 +145,17 @@ export const download = (item) => async (dispatch) => {
 export const deleteFiles = (item) => async (dispatch) => {
 
   var keyList = [];
-  if (item.version && item.version.length > 0) {
-    keyList = item.version.map(x => { return x.key });
-  }
 
   keyList.push(item.key);
 
   console.log("deleteKyes:" + keyList);
 
-  await madoriApi.deleteFiles(keyList).catch(err => {
+  await madoriApiClient.deleteFiles(keyList).catch(err => {
     console.log(err);
   });
 
 
-  var status = await madoriApi.getStrageStatus(utils.getUserid()).catch(err => {
+  var status = await madoriApiClient.getStrageStatus(utils.getUserid()).catch(err => {
     console.log(err);
   });
 
@@ -172,7 +170,7 @@ export const deleteFiles = (item) => async (dispatch) => {
 
 export const getStorageStatus = () => async (dispatch) => {
 
-  madoriApi.getStrageStatus(utils.getUserid()).then((status) => {
+  madoriApiClient.getStrageStatus(utils.getUserid()).then((status) => {
     console.log(status);
     dispatch({
       type: types.GET_STORAGE_STATES,

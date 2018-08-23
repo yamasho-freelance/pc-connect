@@ -27,6 +27,8 @@ module.exports.handler = async (event) => {
             res = await getFileMeta(event);
         }
 
+        res.Items = filterByKeywords(res.Items, event.keywords);
+
         var rem = event.limit - result.Items.length;
         result.Items = result.Items.concat(res.Items.slice(0, rem));
         offsetKey = res.LastEvaluatedKey;
@@ -174,4 +176,21 @@ async function getFileMeta(params, lastEvaluatedKey) {
 
 function getDirection(sortName) {
     return sortName == "asc"
+}
+
+function filterByKeywords(items, keywords) {
+
+    if (keywords) {
+        return items.filter(x => {
+            for (var i in keywords) {
+                if (x.filename.indexOf(keywords[i]) == -1) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+    } else {
+        return items;
+    }
 }

@@ -9,6 +9,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "aws-cloudfront-sign": "^2.2.0",
     "aws4": "^1.7.0",
     "date-utils": "^1.2.21",
     "https": "^1.0.0",

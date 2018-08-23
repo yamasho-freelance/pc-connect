@@ -93,8 +93,8 @@ function deleteFileMeta(keyList) {
             reject(err);
         });
 
-        //最新版が含まれたいた場合はバージョンも全て削除
-        if (fileObjList.find(x => { return x.timestamp == fileMeta.latest })) {
+
+        if (!fileMeta.version || fileMeta.version.length == 0) {
 
             deleteFileMetaOrign(fileMeta.user_id, fileMeta.filepath).then(data => {
                 resolve(data);
@@ -102,6 +102,21 @@ function deleteFileMeta(keyList) {
                 reject(data);
             });
 
+        } else if (fileObjList.find(x => { return x.timestamp == fileMeta.latest })) {
+            //最新版を削除する場合は履歴データの最上位を格上げ
+            var latestIndex = 0;
+            var latest = 0;
+            for (var i in fileMeta.version) {
+                if (latest < Number(fileMeta.version[i].timestamp)) {
+                    latestIndex = i;
+                    latest = fileMeta.version[i].timestamp;
+                }
+            }
+            movingUpVersion(fileMeta.user_id, fileMeta.filepath, latestIndex, latest).then(data => {
+                resolve(data);
+            }).catch(err => {
+                reject(err);
+            })
         } else {
 
             var indexList = [];
@@ -217,6 +232,39 @@ function deleteFileVersion(userid, path, removeIndexList) {
 
     });
 
+}
+
+function movingUpVersion(userid, path, latestIndex, latest) {
+
+    return new Promise((resolve, reject) => {
+        var params = {
+            TableName: process.env.TABLE_NAME,
+            Key: {
+                "user_id": userid,
+                "filepath": path
+            },
+            ExpressionAttributeNames: {
+                '#version': 'version',
+                '#latest': 'latest'
+            },
+            ExpressionAttributeValues: {
+                ':latest': latest
+            },
+            UpdateExpression: 'SET #latest = :latest REMOVE #version[' + latestIndex + ']'
+        };
+
+        console.log("movingUpVersion query")
+        console.log(params);
+
+        dynamo.update(params, (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        });
+
+    });
 }
 
 

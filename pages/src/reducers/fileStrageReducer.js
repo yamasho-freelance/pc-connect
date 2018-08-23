@@ -208,12 +208,22 @@ export default function (state = initialState, action) {
             var deleteKey = action.deleteItem.latest ? action.deleteItem.key : action.deleteItem.parentKey;
             var deleteItemIndex = items.findIndex(x => { return x.key == deleteKey });
             if (deleteItemIndex >= 0) {
+                var deleteItem = items[deleteItemIndex];
 
-                if (action.deleteItem.latest) {
+                if (!deleteItem.version || deleteItem.version.length == 0) {
+                    //最新版のみの場合
                     items.splice(deleteItemIndex, 1);
+                }
+                else if (action.deleteItem.latest) {
+                    //履歴を繰り上げ
+                    deleteItem.version[0].version = Array.concat([], deleteItem.version);
+                    deleteItem.version[0].latest = deleteItem.version[0].timestamp;
+                    deleteItem.version[0].username = deleteItem.username;
+                    deleteItem.version[0].version.splice(0, 1);
+                    items[deleteItemIndex] = deleteItem.version[0];
                 } else {
-                    var deleteItem = items[deleteItemIndex];
-                    var deleteVersionIndex = deleteItem.version.findIndex(x => { return x.key = action.deleteItem.key });
+                    //履歴データを削除
+                    var deleteVersionIndex = deleteItem.version.findIndex(x => { return x.key == action.deleteItem.key });
                     if (deleteVersionIndex >= 0) {
                         deleteItem.version.splice(deleteVersionIndex, 1);
                     }

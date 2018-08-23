@@ -1,0 +1,296 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Parameters: 
+    StageParam: 
+      Type: String
+      Default: v1
+    LambdaArn:
+      Type: String
+      Default: arn:aws:iam::004590054840:role/madori_lambda_role
+   
+Globals:
+    Function:
+      Timeout: 60
+      Runtime: nodejs8.10
+      Handler: index.handler
+
+Resources:
+
+  CloudwatchRoleSetting:
+    Type: "AWS::ApiGateway::Account"
+    Properties: 
+      CloudWatchRoleArn: arn:aws:iam::004590054840:role/apigateway_cloudwatchlogs_role
+  
+  MadoriBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: madori-cloud-user-storage
+
+  MadoriBucketSystemStorage:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: madori-cloud-system-storage
+
+  SearchFiles:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: SearchFiles
+      CodeUri: ../../functions/SearchFiles/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+         Variables:
+          TABLE_NAME: madori-files
+          LATEST_INDEX: latest-index
+          USERNAME_INDEX: username-index
+          FILENAME_INDEX : filename-index
+          SIZE_INDEX : size-index 
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /search/files
+            Method: post
+            RestApiId: !ImportValue MadoriApi
+
+  CheckCapacity:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: CheckCapacity
+      CodeUri: ../../functions/CheckCapacity/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          BUCKET_NAME: madori-cloud-user-storage
+          BASIC_CAPACITY: 50MB
+          BUSINESS_CAPACITY: 100MB
+          WARNING_LIMIT: 0.9 
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /storage/status
+            Method: get
+            RestApiId: !ImportValue MadoriApi
+
+  
+  CheckCapacity2:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: CheckCapacity2
+      CodeUri: ../../functions/CheckCapacity2/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          BUCKET_NAME: madori-cloud-user-storage
+          BASIC_CAPACITY: 50MB
+          BUSINESS_CAPACITY: 100MB
+          WARNING_LIMIT: 0.9 
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /storage/status2
+            Method: get
+            RestApiId: !ImportValue MadoriApi
+
+  CreatePresigndUrl:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: CreatePresigndUrl
+      CodeUri: ../../functions/CreatePresigndUrl/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          S3_BUCKET: madori.cloud
+          SETTING_PAGE_PATH: dest/index.html
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /settings/url
+            Method: get
+            RestApiId: !ImportValue MadoriApi
+
+  CreateUploadUrl:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: CreateUploadUrl
+      CodeUri: ../../functions/CreateUploadUrl/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          S3_BUCKET: madori-cloud-user-storage
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /upload/url
+            Method: get
+            RestApiId: !ImportValue MadoriApi
+
+  SignIn:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: SignIn
+      CodeUri: ../../functions/SignIn/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          KEY_ID: 0022d1d9-f0c7-45e1-8f84-2b77c6fdcba9
+          WEB_AUTH_URL: https://kanri.madori.co.jp/auth/auth.php
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          CLIENT_ID: 5umtouvrd4l49c9va2hg0h9j5s
+          PASS_KEY: madori
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /auth/login
+            Method: post
+            RestApiId: !ImportValue MadoriApi
+
+  GetToken:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: GetToken
+      CodeUri: ../../functions/GetToken/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          KEY_ID: 0022d1d9-f0c7-45e1-8f84-2b77c6fdcba9
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          CLIENT_ID: 5umtouvrd4l49c9va2hg0h9j5s
+          PASS_KEY: madori
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /auth/getToken
+            Method: post
+            RestApiId: !ImportValue MadoriApi  
+
+  RefleshToken:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: RefleshToken
+      CodeUri: ../../functions/RefleshToken/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          WEB_AUTH_URL: https://kanri.madori.co.jp/auth/auth.php
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          CLIENT_ID: 5umtouvrd4l49c9va2hg0h9j5s
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /auth/reflesh
+            Method: get
+            RestApiId: !ImportValue MadoriApi
+    
+  GetUsers:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: GetUsers
+      CodeUri: ../../functions/GetUsers/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          BUCKET_NAME:  madori-cloud-user-storage
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /storage/users
+            Method: get
+            RestApiId: !ImportValue MadoriApi
+
+  DeleteFiles:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: DeleteFiles
+      CodeUri: ../../functions/DeleteFiles/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          MADORIDATA_BUCKET_NAME: madori-cloud-user-storage
+          THUMBNAIL_BUCKET_NAME: madori-cloud-system-storage
+          TABLE_NAME: madori-files
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /storage/files
+            Method: delete
+            RestApiId: !ImportValue MadoriApi
+                
+  GetDownloadUrl:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: GetDownloadUrl
+      CodeUri: ../../functions/GetDownloadUrl/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          BUCKET_NAME:  madori-cloud-user-storage
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /download/url
+            Method: get
+            RestApiId: !ImportValue MadoriApi
+
+  S3CreateEvent:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: S3CreateEvent
+      CodeUri: ../../functions/S3CreateEvent/src
+      Role: !Ref LambdaArn
+      MemorySize: 512
+      Timeout: 120
+      Environment :
+        Variables:
+          MADORI_BUCKET: madori-cloud-user-storage
+          THUMBNAIL_BUCKET: madori-cloud-system-storage
+          THUMBNAIL_FILE_NAME: zumen.jpg
+          TABLE_NAME: madori-files
+          TZ: Asia/Tokyo
+      Events: 
+        S3Put: 
+          Type: S3
+          Properties:
+            Bucket: !Ref MadoriBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: '.mdzx'
+
+
+      

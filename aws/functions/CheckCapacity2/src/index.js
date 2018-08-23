@@ -37,7 +37,7 @@ module.exports.handler = async (event) => {
     if (useRate > 1) {
         status = "deny";
     } else if (useRate > Number(process.env.WARNING_LIMIT)) {
-        status = "warining"
+        status = "warning"
     }
     else {
         status = "allow";

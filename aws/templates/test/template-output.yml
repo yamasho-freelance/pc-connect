@@ -4,6 +4,13 @@ Globals:
     Handler: index.handler
     Runtime: nodejs8.10
     Timeout: 60
+Outputs:
+  MadoriApiOutput:
+    Description: The ID of the VPC
+    Export:
+      Name: MadoriApi
+    Value:
+      Ref: MadoriApi
 Parameters:
   LambdaArn:
     Default: arn:aws:iam::004590054840:role/madori_lambda_role
@@ -41,7 +48,7 @@ Resources:
     Properties:
       AutoPublishAlias:
         Ref: StageParam
-      CodeUri: s3://madori-cloud-code/ee2c57267f1629c40081ce732d45e44c
+      CodeUri: s3://madori-cloud-code/7bfcb820e5f1973e4c0711f03565f9a3
       Environment:
         Variables:
           BASIC_CAPACITY: 50MB
@@ -70,7 +77,7 @@ Resources:
     Properties:
       AutoPublishAlias:
         Ref: StageParam
-      CodeUri: s3://madori-cloud-code/263fdcde1b8a0509972a0ceb68cf4e7b
+      CodeUri: s3://madori-cloud-code/c234b1b9435a1a271d300b3bfca44d53
       Environment:
         Variables:
           S3_BUCKET: madori.cloud
@@ -113,7 +120,7 @@ Resources:
     Properties:
       AutoPublishAlias:
         Ref: StageParam
-      CodeUri: s3://madori-cloud-code/dcdfb6e58110b16c56d2d09a2d9e665b
+      CodeUri: s3://madori-cloud-code/0ec5afca7aafdee4b7ca05bf96d9ece3
       Environment:
         Variables:
           MADORIDATA_BUCKET_NAME: madori-cloud-user-storage-test
@@ -218,7 +225,7 @@ Resources:
     Type: AWS::Serverless::Function
   S3CreateEvent:
     Properties:
-      CodeUri: s3://madori-cloud-code/4c77f795e9e006b4431d89e11daf206a
+      CodeUri: s3://madori-cloud-code/71057b927a7f08aa2ba89455fd5609af
       Environment:
         Variables:
           MADORI_BUCKET: madori-cloud-user-storage-test
@@ -248,7 +255,7 @@ Resources:
     Properties:
       AutoPublishAlias:
         Ref: StageParam
-      CodeUri: s3://madori-cloud-code/fdffb56a488107527f99232fae6ff6f4
+      CodeUri: s3://madori-cloud-code/1fe2e78b7d76f9b1e1420adfe8c8de2e
       Environment:
         Variables:
           FILENAME_INDEX: filename-index

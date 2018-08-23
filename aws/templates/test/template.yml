@@ -13,7 +13,13 @@ Globals:
       Timeout: 60
       Runtime: nodejs8.10
       Handler: index.handler
-      
+
+Outputs:
+  MadoriApiOutput:
+    Description: The ID of the VPC
+    Value: !Ref MadoriApi
+    Export:
+      Name: MadoriApi      
 
 Resources:
 
@@ -169,6 +175,27 @@ Resources:
           Type: Api
           Properties:
             Path: /auth/login
+            Method: post
+            RestApiId: !Ref MadoriApi
+
+  GetToken:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: GetToken
+      CodeUri: ../../functions/GetToken/src
+      Role: !Ref LambdaArn
+      AutoPublishAlias: !Ref StageParam
+      Environment :
+        Variables:
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          CLIENT_ID: 5umtouvrd4l49c9va2hg0h9j5s
+          PASS_KEY: madori
+          TZ: Asia/Tokyo
+      Events: 
+        Api: 
+          Type: Api
+          Properties:
+            Path: /auth/webToken
             Method: post
             RestApiId: !Ref MadoriApi
 
