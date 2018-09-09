@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters: 
+  StageParam: 
+    Type: String
+    Default: test
+  LambdaArn:
+    Type: String
+    Default: arn:aws:iam::004590054840:role/madori_lambda_role
+  PublishVersionArn:
+    Type: String
+    Default: arn:aws:lambda:ap-northeast-1:004590054840:function:PublishLambdaVersion
+  PublishId:
+    Type: String
+    Default: 2
+  
+
+Resources:
+
+  LambdaVersionTestPublish:
+    Type: 'Custom::PublishVersion'
+    Properties:
+      ServiceToken: !Ref PublishVersionArn
+      FunctionName: LambdaVersionTest2
+      Alias : !Ref StageParam
+      PublishId: !Ref PublishId
+
+  
+  LambdaVersionTestPermission:
+    Type: 'AWS::Lambda::Permission'
+    DependsOn: LambdaVersionTestPublish
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaVersionTestPublish.AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub
+      - 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*'
+      - { ApiGatewayApi: !ImportValue MadoriApi}
+    

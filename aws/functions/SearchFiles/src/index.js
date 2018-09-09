@@ -1,11 +1,14 @@
 'use strict';
 var aws = require('aws-sdk');
+var kmsUtil = require('./kms_util');
 
 aws.config.region = 'ap-northeast-1';
 var dynamo = new aws.DynamoDB();
 var dynamoDocument = new aws.DynamoDB.DocumentClient();
 
-module.exports.handler = async (event) => {
+module.exports.handler = async (event, context) => {
+
+    console.log(context);
 
     var indexName = getIndexName(event.sort);
     var offsetKeyAttributes = await getLocalSecondaryIndexSchema(indexName);
@@ -15,7 +18,8 @@ module.exports.handler = async (event) => {
     };
 
     event.indexName = indexName;
-
+    var useridFull = await kmsUtil.decryptId(decodeURIComponent(event.userid));
+    event.userid = useridFull.split("-")[0];
 
     var offsetKey = event.offsetKey;
     var resOffsetKey = null;

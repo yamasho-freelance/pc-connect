@@ -13,5 +13,8 @@ Resources:
       Environment :
         Variables:
           TABLE_NAME: madori-files-test2
-          SORT_UPADTE_INDEX: user_id-latest-index 
+          LATEST_INDEX: latest-index
+          USERNAME_INDEX: username-index
+          FILENAME_INDEX : filename-index
+          SIZE_INDEX : size-index 
           TZ: Asia/Tokyo

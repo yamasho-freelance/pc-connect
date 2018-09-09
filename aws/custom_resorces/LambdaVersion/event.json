@@ -1,0 +1,14 @@
+{
+    "StackId": "arn:aws:cloudformation:ap-northeast-1:EXAMPLE/stack-name/guid",
+    "ResponseURL": "http://pre-signed-S3-url-for-response",
+    "ResourceProperties": {
+        "StackName": "stack-name",
+        "FunctionName": "LambdaVersionTest2",
+        "Alias": "v3",
+        "ApiArn": "arn:aws:execute-api:ap-northeast-1:004590054840:wcet7ndu1j/test/*/*"
+    },
+    "RequestType": "Update",
+    "ResourceType": "Custom::TestResource",
+    "RequestId": "unique id for this create request",
+    "LogicalResourceId": "MyTestResource"
+}

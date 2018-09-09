@@ -98,10 +98,8 @@ paths:
           description: "400 response"
         500:
           description: "500 response"
-      security:
-      - sigv4: []
       x-amazon-apigateway-integration:
-        uri: "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:004590054840:function:SignIn:${stageVariables.Stage}/invocations"
+        uri: "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:004590054840:function:GetToken:${stageVariables.Stage}/invocations"
         responses:
           default:
             statusCode: "200"
@@ -168,17 +166,20 @@ paths:
           description: "200 response"
           schema:
             $ref: "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         400:
           description: "400 response"
         500:
           description: "500 response"
-      security:
-      - sigv4: []
       x-amazon-apigateway-integration:
         uri: "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:004590054840:function:RefleshToken:${stageVariables.Stage}/invocations"
         responses:
           default:
             statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
           .*GeneralServerError.*:
             statusCode: "500"
           .*MadoriError.*:
@@ -239,7 +240,7 @@ paths:
         500:
           description: "500 response"
       security:
-      - madori: []
+      - madori-test: []
       x-amazon-apigateway-integration:
         uri: "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:004590054840:function:CreatePresigndUrl:${stageVariables.Stage}/invocations"
         responses:
@@ -300,81 +301,17 @@ paths:
           description: "200 response"
           schema:
             $ref: "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
         400:
           description: "400 response"
         500:
           description: "500 response"
       security:
-      - madori: []
+      - madori-test: []
       x-amazon-apigateway-integration:
         uri: "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:004590054840:function:CheckCapacity:${stageVariables.Stage}/invocations"
-        responses:
-          default:
-            statusCode: "200"
-          .*GeneralServerError.*:
-            statusCode: "500"
-          .*MadoriError.*:
-            statusCode: "400"
-        passthroughBehavior: "when_no_templates"
-        httpMethod: "POST"
-        requestTemplates:
-          application/json: "{\n    \"authId\":\"$input.params('id')\"}"
-        contentHandling: "CONVERT_TO_TEXT"
-        type: "aws"
-    options:
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      responses:
-        200:
-          description: "200 response"
-          schema:
-            $ref: "#/definitions/Empty"
-          headers:
-            Access-Control-Allow-Origin:
-              type: "string"
-            Access-Control-Allow-Methods:
-              type: "string"
-            Access-Control-Allow-Headers:
-              type: "string"
-      x-amazon-apigateway-integration:
-        responses:
-          default:
-            statusCode: "200"
-            responseParameters:
-              method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-        passthroughBehavior: "when_no_match"
-        requestTemplates:
-          application/json: "{\"statusCode\": 200}"
-        type: "mock"
-  /storage/status2:
-    get:
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "id"
-        in: "query"
-        required: false
-        type: "string"
-      responses:
-        200:
-          description: "200 response"
-          schema:
-            $ref: "#/definitions/Empty"
-          headers:
-            Access-Control-Allow-Origin:
-              type: "string"
-        400:
-          description: "400 response"
-        500:
-          description: "500 response"
-      x-amazon-apigateway-integration:
-        uri: "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:004590054840:function:CheckCapacity2:${stageVariables.Stage}/invocations"
         responses:
           default:
             statusCode: "200"
@@ -442,6 +379,8 @@ paths:
           description: "400 response"
         500:
           description: "500 response"
+      security:
+      - madori-test: []
       x-amazon-apigateway-integration:
         uri: "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:004590054840:function:GetUsers:${stageVariables.Stage}/invocations"
         responses:
@@ -655,7 +594,7 @@ paths:
         500:
           description: "500 response"
       security:
-      - madori: []
+      - madori-test: []
       x-amazon-apigateway-request-validator: "クエリ文字列パラメータおよびヘッダーの検証"
       x-amazon-apigateway-integration:
         uri: "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:004590054840:function:CreateUploadUrl:${stageVariables.Stage}/invocations"
@@ -723,6 +662,8 @@ paths:
           description: "400 response"
         500:
           description: "500 response"
+      security:
+      - madori-test: []
       x-amazon-apigateway-integration:
         uri: "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:004590054840:function:SearchFiles:${stageVariables.Stage}/invocations"
         responses:
@@ -779,7 +720,7 @@ paths:
         type: "mock"
  
 securityDefinitions:
-  madori:
+  madori-test:
     type: "apiKey"
     name: "Authorization"
     in: "header"
@@ -793,10 +734,26 @@ securityDefinitions:
     name: "Authorization"
     in: "header"
     x-amazon-apigateway-authtype: "awsSigv4"
+  madori:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"
+    x-amazon-apigateway-authtype: "cognito_user_pools"
+    x-amazon-apigateway-authorizer:
+      providerARNs:
+      - "arn:aws:cognito-idp:ap-northeast-1:004590054840:userpool/ap-northeast-1_mV33Mv9Co"
+      type: "cognito_user_pools"
 definitions:
   Empty:
     type: "object"
     title: "Empty Schema"
+x-amazon-apigateway-gateway-responses:
+  UNAUTHORIZED:
+    statusCode: 401
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+    responseTemplates:
+      application/json: "{\"message\":$context.error.messageString}"
 x-amazon-apigateway-request-validators:
   クエリ文字列パラメータおよびヘッダーの検証:
     validateRequestParameters: true

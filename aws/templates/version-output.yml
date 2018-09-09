@@ -1,0 +1,281 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  PublishId:
+    Default: '2'
+    Type: String
+  PublishVersionArn:
+    Default: arn:aws:lambda:ap-northeast-1:004590054840:function:PublishLambdaVersion
+    Type: String
+  StageParam:
+    Default: test
+    Type: String
+Resources:
+  ApiDeployment:
+    Properties:
+      Description:
+        Ref: StageParam
+      RestApiId:
+        Fn::ImportValue: MadoriApi
+      StageDescription:
+        MethodSettings:
+        - DataTraceEnabled: true
+          HttpMethod: '*'
+          LoggingLevel: ERROR
+          ResourcePath: /*
+        Variables:
+          Stage:
+            Ref: StageParam
+      StageName:
+        Ref: StageParam
+    Type: AWS::ApiGateway::Deployment
+  CheckCapacityPermission:
+    DependsOn: CheckCapacityPublish
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - CheckCapacityPublish
+        - AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*
+        - ApiGatewayApi:
+            Fn::ImportValue: MadoriApi
+    Type: AWS::Lambda::Permission
+  CheckCapacityPublish:
+    Properties:
+      Alias:
+        Ref: StageParam
+      FunctionName: CheckCapacity
+      PublishId:
+        Ref: PublishId
+      ServiceToken:
+        Ref: PublishVersionArn
+    Type: Custom::PublishVersion
+  CreatePresigndUrlPermission:
+    DependsOn: CreatePresigndUrlPublish
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - CreatePresigndUrlPublish
+        - AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*
+        - ApiGatewayApi:
+            Fn::ImportValue: MadoriApi
+    Type: AWS::Lambda::Permission
+  CreatePresigndUrlPublish:
+    Properties:
+      Alias:
+        Ref: StageParam
+      FunctionName: CreatePresigndUrl
+      PublishId:
+        Ref: PublishId
+      ServiceToken:
+        Ref: PublishVersionArn
+    Type: Custom::PublishVersion
+  CreateUploadUrlPermission:
+    DependsOn: CreateUploadUrlPublish
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - CreateUploadUrlPublish
+        - AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*
+        - ApiGatewayApi:
+            Fn::ImportValue: MadoriApi
+    Type: AWS::Lambda::Permission
+  CreateUploadUrlPublish:
+    Properties:
+      Alias:
+        Ref: StageParam
+      FunctionName: CreateUploadUrl
+      PublishId:
+        Ref: PublishId
+      ServiceToken:
+        Ref: PublishVersionArn
+    Type: Custom::PublishVersion
+  DeleteFilesPermission:
+    DependsOn: DeleteFilesPublish
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - DeleteFilesPublish
+        - AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*
+        - ApiGatewayApi:
+            Fn::ImportValue: MadoriApi
+    Type: AWS::Lambda::Permission
+  DeleteFilesPublish:
+    Properties:
+      Alias:
+        Ref: StageParam
+      FunctionName: DeleteFiles
+      PublishId:
+        Ref: PublishId
+      ServiceToken:
+        Ref: PublishVersionArn
+    Type: Custom::PublishVersion
+  GetDownloadUrlPermission:
+    DependsOn: GetDownloadUrlPublish
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - GetDownloadUrlPublish
+        - AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*
+        - ApiGatewayApi:
+            Fn::ImportValue: MadoriApi
+    Type: AWS::Lambda::Permission
+  GetDownloadUrlPublish:
+    Properties:
+      Alias:
+        Ref: StageParam
+      FunctionName: GetDownloadUrl
+      PublishId:
+        Ref: PublishId
+      ServiceToken:
+        Ref: PublishVersionArn
+    Type: Custom::PublishVersion
+  GetTokenPermission:
+    DependsOn: GetTokenPublish
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - GetTokenPublish
+        - AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*
+        - ApiGatewayApi:
+            Fn::ImportValue: MadoriApi
+    Type: AWS::Lambda::Permission
+  GetTokenPublish:
+    Properties:
+      Alias:
+        Ref: StageParam
+      FunctionName: GetToken
+      PublishId:
+        Ref: PublishId
+      ServiceToken:
+        Ref: PublishVersionArn
+    Type: Custom::PublishVersion
+  GetUsersPermission:
+    DependsOn: GetUsersPublish
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - GetUsersPublish
+        - AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*
+        - ApiGatewayApi:
+            Fn::ImportValue: MadoriApi
+    Type: AWS::Lambda::Permission
+  GetUsersPublish:
+    Properties:
+      Alias:
+        Ref: StageParam
+      FunctionName: GetUsers
+      PublishId:
+        Ref: PublishId
+      ServiceToken:
+        Ref: PublishVersionArn
+    Type: Custom::PublishVersion
+  RefleshTokenPermission:
+    DependsOn: RefleshTokenPublish
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - RefleshTokenPublish
+        - AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*
+        - ApiGatewayApi:
+            Fn::ImportValue: MadoriApi
+    Type: AWS::Lambda::Permission
+  RefleshTokenPublish:
+    Properties:
+      Alias:
+        Ref: StageParam
+      FunctionName: RefleshToken
+      PublishId:
+        Ref: PublishId
+      ServiceToken:
+        Ref: PublishVersionArn
+    Type: Custom::PublishVersion
+  SearchFilesPermission:
+    DependsOn: SearchFilesPublish
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - SearchFilesPublish
+        - AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*
+        - ApiGatewayApi:
+            Fn::ImportValue: MadoriApi
+    Type: AWS::Lambda::Permission
+  SearchFilesPublish:
+    Properties:
+      Alias:
+        Ref: StageParam
+      FunctionName: SearchFiles
+      PublishId:
+        Ref: PublishId
+      ServiceToken:
+        Ref: PublishVersionArn
+    Type: Custom::PublishVersion
+  SignInPermission:
+    DependsOn: SignInPublish
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - SignInPublish
+        - AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*
+        - ApiGatewayApi:
+            Fn::ImportValue: MadoriApi
+    Type: AWS::Lambda::Permission
+  SignInPublish:
+    Properties:
+      Alias:
+        Ref: StageParam
+      FunctionName: SignIn
+      PublishId:
+        Ref: PublishId
+      ServiceToken:
+        Ref: PublishVersionArn
+    Type: Custom::PublishVersion
+Transform: AWS::Serverless-2016-10-31

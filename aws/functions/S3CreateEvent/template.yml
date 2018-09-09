@@ -8,12 +8,13 @@ Resources:
       Runtime: nodejs8.10
       Timeout: 60
       FunctionName: PickThumbnail
-      CodeUri: lambda
+      CodeUri: src
       Role: arn:aws:iam::032500022239:role/sam_role
       Environment :
         Variables:
-          MADORI_BUCKET: madori-web
-          THUMBNAIL_BUCKET: madori-web
+          MADORI_BUCKET: madori-cloud-user-storage-test
+          THUMBNAIL_BUCKET: madori-cloud-system-storage-test
           THUMBNAIL_FILE_NAME: zumen.jpg
+          TABLE_NAME: madori-files-test2
           STAGE: prod
           TZ: Asia/Tokyo

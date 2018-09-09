@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters: 
+  StageParam: 
+    Type: String
+    Default: test
+  LambdaArn:
+    Type: String
+    Default: arn:aws:iam::004590054840:role/madori_lambda_role
+Outputs:
+  PublishLambdaVersion:
+    Description: PublishLambdaVersion
+    Value: !Ref PublishLambdaVersion
+    Export:
+      Name: PublishLambdaVersion
+   
+Resources:
+
+ PublishLambdaVersion:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: PublishLambdaVersion
+      CodeUri: src
+      Role: !Ref LambdaArn
+      Timeout: 300
+      Runtime: nodejs8.10
+      Handler: index.handler
+      Environment :
+        Variables:
+          BUCKET_NAME: madori-cloud-user-storage-test
+          SETTING_BUCKET: madori-cloud-settings
+          CAPACITY_SETTING_FILE_KEY: test/capacity.json
+          WARNING_LIMIT: 0.9 
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
+          TZ: Asia/Tokyo

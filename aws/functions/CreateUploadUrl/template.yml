@@ -7,12 +7,14 @@ Resources:
       Handler: index.handler
       Runtime: nodejs8.10
       FunctionName: createPresigndURL
-      CodeUri: lambda
+      CodeUri: src
+      Timeout: 60
       Role: arn:aws:iam::032500022239:role/sam_role      
       Environment :
         Variables:
-          S3_BUCKET: madori_web
-          STAGE: prod
+          S3_BUCKET: madori-cloud-users-storage-test
+          SETTING_BUCKET: madori-cloud-settings
+          REPLACEMENT_FILE_KEY: test/replacement.json
           TZ: Asia/Tokyo
       Events: 
         Api: 

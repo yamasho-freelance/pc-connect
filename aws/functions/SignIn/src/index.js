@@ -8,8 +8,9 @@ var crypto = require("crypto");
 aws.config.region = 'ap-northeast-1';
 
 
-module.exports.handler = async (event) => {
+module.exports.handler = async (event, context) => {
 
+    console.log(context);
     const TEMP_PASSWORD = "madori1234";
 
     //認証IDと暗号化された認証IDの妥当性をチェック

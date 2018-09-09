@@ -1,0 +1,18 @@
+{
+  "name": "checkcapacity",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bytes": "^3.0.0",
+    "cfn-response": "^1.0.1",
+    "crypto": "^1.0.1",
+    "request": "^2.87.0",
+    "uuid": "^3.3.2"
+  }
+}

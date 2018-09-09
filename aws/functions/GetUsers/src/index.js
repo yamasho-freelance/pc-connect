@@ -1,12 +1,18 @@
 'use strict';
 var aws = require('aws-sdk');
+var kmsUtil = require('./kms_util');
 
 aws.config.region = 'ap-northeast-1';
 var s3 = new aws.S3();
 
-module.exports.handler = async (event) => {
+module.exports.handler = async (event, context) => {
+    
+    console.log(context);
 
-    return await getUsers(event.authId);
+    var userid = await kmsUtil.decryptId(decodeURIComponent(event.authId));
+    userid = userid.split("-")[0];
+
+    return await getUsers(userid);
 
 };
 

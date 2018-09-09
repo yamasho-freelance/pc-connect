@@ -6,6 +6,7 @@ aws.config.region = 'ap-northeast-1';
 
 module.exports.handler = async (event) => {
 
+    
     var cog = new aws.CognitoIdentityServiceProvider();
     var response = await refleshToken(event.token).catch((err)=>{
         throw new error.GeneralSrverError(err,"Failed RefreshToken")

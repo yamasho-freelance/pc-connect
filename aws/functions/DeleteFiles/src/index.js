@@ -7,6 +7,7 @@ var dynamo = new aws.DynamoDB.DocumentClient();
 
 module.exports.handler = async (event, context) => {
 
+    console.log(context);
     var keyList = event.keyList.map(x => { return decodeURI(x) });
     var taskList = [deleteFiles(keyList), deleteThumbnails(keyList), deleteFileMeta(keyList)];
 
@@ -129,8 +130,6 @@ function deleteFileMeta(keyList) {
                     indexList.push(index);
                 }
             };
-
-            console.log(indexList);
 
             deleteFileVersion(fileMeta.user_id, fileMeta.filepath, indexList).then(data => {
                 resolve(data);

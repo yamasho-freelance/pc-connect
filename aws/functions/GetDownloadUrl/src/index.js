@@ -4,8 +4,9 @@ var aws = require('aws-sdk');
 aws.config.region = 'ap-northeast-1';
 var s3 = new aws.S3();
 
-module.exports.handler = async (event) => {
-
+module.exports.handler = async (event, context) => {
+    
+    console.log(context);
     return await getURL(decodeURIComponent(event.key));
 
 };

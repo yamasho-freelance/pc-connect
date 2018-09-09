@@ -9,10 +9,10 @@ var cog = new aws.CognitoIdentityServiceProvider();
 aws.config.region = 'ap-northeast-1';
 
 
-module.exports.handler = async (event) => {
+module.exports.handler = async (event, context) => {
 
     console.log(event.authId);
-    var id = await kmsUtil.decryptId(event.authId).catch((err) => {
+    var id = await kmsUtil.decryptId(decodeURIComponent(event.authId)).catch((err) => {
         throw new error.MadoriError("ID is Invalid");
     });
     var username = id.split("-")[0];
@@ -108,13 +108,41 @@ module.exports.handler = async (event) => {
         console.log("basicCount =" + basicCount);
         console.log("businessCount =" + businessCount);
 
-        var basicCapacity = bytes(process.env.BASIC_CAPACITY);
-        var businessCapacity = bytes(process.env.BUSINESS_CAPACITY);
+        var capacitySetting = await getCapacitySetting();
+        console.log(capacitySetting);
+
+        var basicCapacity = bytes(capacitySetting.basic);
+        var businessCapacity = bytes(capacitySetting.business);
 
         console.log("basicCapacity =" + basicCapacity);
         console.log("businessCapacity =" + businessCapacity);
 
         return basicCapacity * basicCount + businessCapacity * businessCount;
+
+    }
+
+    async function getCapacitySetting() {
+
+        return new Promise((resolve, reject) => {
+            var params = {
+                Bucket: process.env.SETTING_BUCKET,
+                Key: process.env.CAPACITY_SETTING_FILE_KEY
+            }
+
+            s3.getObject(params, (err, data) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    var result = null;
+                    try {
+                        result = JSON.parse(data.Body.toString());
+                    } catch (e) {
+                        reject(new Error("容量設定の取得に失敗しました。"));
+                    }
+                    resolve(result);
+                }
+            })
+        })
 
     }
 

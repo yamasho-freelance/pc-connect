@@ -1,27 +1,25 @@
 'use strict';
 var aws = require('aws-sdk');
-var unzip = require("unzip");
+var unzip = require("unzipper");
 var stream = require('stream');
+var fs = require("fs");
 
 aws.config.region = 'ap-northeast-1';
 var s3 = new aws.S3();
 var dynamo = new aws.DynamoDB.DocumentClient();
 
-module.exports.handler = async (event) => {
+module.exports.handler = async (event, context) => {
 
-    var taskList = [];
+    
     var item = event.Records[0];
-    var decodeKey = decodeURI(item.s3.object.key);
+    var decodeKey = decodeURIComponent(item.s3.object.key);
     console.log(decodeKey);
 
-    taskList.push(pickThumbnail(decodeKey));
-    taskList.push(saveFileMeta(decodeKey, item.s3.object.size));
+    await pickThumbnail(decodeKey);
+    await saveFileMeta(decodeKey, item.s3.object.size);
 
-    await Promise.all(taskList).then(() => {
-        return true;
-    }).catch((err) => {
-        throw (err);
-    });
+    return true;
+
 
 };
 
@@ -32,10 +30,10 @@ async function saveFileMeta(key, size) {
     var result = null;
 
     if (!file) {
-        result = putFileMeta(fileObj)
+        result = await putFileMeta(fileObj)
     } else {
         console.log(file)
-        result = updateFileMeta(fileObj, file.Item);
+        result = await updateFileMeta(fileObj, file.Item);
     }
     return result;
 }
@@ -45,7 +43,6 @@ function getFileMeta(userid, filepath) {
 
     return new Promise((resolve, reject) => {
 
-        console.log("koko");
         var params = {
             TableName: process.env.TABLE_NAME,
             Key: {
@@ -88,12 +85,16 @@ function putFileMeta(fileMeta) {
             }
         };
 
+
+        console.log("putFilemetaQuery");
+        console.log(params);
+
         dynamo.put(params, (err, data) => {
             if (err) {
                 reject(err);
             } else {
 
-                console.log(data);
+                console.log("ファイルデータ書き込み完了");
                 resolve(data);
             }
         });
@@ -128,6 +129,10 @@ function updateFileMeta(fileMeta, oldFileMeta) {
         }
 
         params.UpdateExpression += ", #latest=:latest , #size = :size";
+
+
+        console.log("updateFileMetaQuery");
+        console.log(params);
 
         dynamo.update(params, (err, data) => {
             if (err) {
@@ -179,49 +184,44 @@ function createMadoriFileObject(key, size) {
 
 async function pickThumbnail(key) {
 
-    var file = await getFile(key);
+    var stream = getFileStream(key);
     var thumbKey = key.replace(".mdzx", ".jpg");
-    return createThumbnail(file.Body, thumbKey);
+    console.log(stream);
+    return createThumbnail(stream, thumbKey);
 }
 
-function createThumbnail(binary, key) {
+function createThumbnail(fileStream, key) {
     return new Promise((resolve, reject) => {
 
-
-        var bufferStream = new stream.PassThrough();
-        bufferStream.end(binary);
-        bufferStream.pipe(unzip.Parse())
-            .on("entry", async (entry) => {
-                console.log(entry);
+        fileStream.on("error", err => {
+            reject(err);
+            console.log(err);
+        });
+        fileStream.pipe(unzip.Parse())
+            .on("entry", (entry) => {
+                console.log(entry.path);
                 if (entry.path == process.env.THUMBNAIL_FILE_NAME) {
 
+                    console.log("サムネイルを生成します");
                     console.log(key);
 
-                    const transform = new stream.Transform({ transform(chunk, encoding, callback) { callback(null, chunk); } });
-
-                    var bufs = new Array();
-
-                    transform.on('data', (chunk) => {
-                        bufs.push(chunk);
-                    });
-                    transform.on('end', async () => {
-                        var thumbBinary = Buffer.concat(bufs);
-                        uploadS3(thumbBinary, key).then(() => {
+                    entry.buffer().then(content => {
+                        console.log(content);
+                        uploadS3(content, key).then(() => {
                             resolve();
                         }).catch((err) => {
                             reject(err);
                         });
-                    });
+                    })
 
-                    transform.on('error', (error) => {
-                        reject(error);
-                    });
-
-                    entry.pipe(transform);
                 }
                 else {
                     entry.autodrain();
                 }
+            }).on("error", err => {
+                console.log("-------------err---------------")
+                console.log(err);   
+                reject(err);
             })
     });
 }
@@ -245,30 +245,23 @@ function uploadS3(stream, key) {
                 reject(err);
             } else {
                 console.log(data);
+                console.log("サムネイルを生成完了");
                 resolve(data);
             }
         });
     });
 }
 
-function getFile(key) {
+function getFileStream(key) {
 
-    return new Promise((resolve, reject) => {
+    var params = {
+        "Bucket": process.env.MADORI_BUCKET,
+        "Key": key
+    }
 
-        var params = {
-            "Bucket": process.env.MADORI_BUCKET,
-            "Key": key
-        }
 
-        s3.getObject(params, (err, data) => {
-            if (err) {
-                reject(err);
-            } else {
-                console.log(data);
-                resolve(data);
-            }
-        });
-    });
+    return s3.getObject(params).createReadStream();
+
 }
 
 

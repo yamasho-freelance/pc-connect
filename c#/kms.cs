@@ -38,7 +38,7 @@ namespace kms
             string accessKey = "AKIAJCRLXQX2J6OKN4GQ";
             string seacretKey = "29XQBOyGZwkgXcW/4yylTdzWu2Hv95EyKq/lwmN0";
             string keyID = "0022d1d9-f0c7-45e1-8f84-2b77c6fdcba9";
-            var str = "18310-73899-78639-52683";
+            var str = "19185-57675-51957-67395";
             var kmsc = new AmazonKeyManagementServiceClient(accessKey, seacretKey, Amazon.RegionEndpoint.APNortheast1); //(アクセスキー、シークレットキー、リージョンよりクライアント作成)
             var plaintext = new MemoryStream(Encoding.UTF8.GetBytes(str));
             EncryptRequest encryptRequest = new EncryptRequest() //(暗号化リクエストを作成)

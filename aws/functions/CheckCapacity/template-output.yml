@@ -1,47 +1,63 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Outputs:
+  LambdaVersionTest:
+    Description: LambdaVersionTest
+    Export:
+      Name: LambdaVersionTest
+    Value:
+      Ref: LambdaVersionTest
 Parameters:
+  LambdaArn:
+    Default: arn:aws:iam::004590054840:role/madori_lambda_role
+    Type: String
+  PublishVersionArn:
+    Default: arn:aws:lambda:ap-northeast-1:004590054840:function:PublishLambdaVersion
+    Type: String
   StageParam:
     Default: test
     Type: String
 Resources:
-  CheckCapacity:
+  LambdaVersionTest:
     Properties:
-      AutoPublishAlias: test
-      CodeUri: s3://codes-pc-connect/ab640c5387eabcdd1fed2572049b031f
+      CodeUri: s3://madori-cloud-code/b0bf05feb5d4e6f5f16bec53fbb956bd
       Environment:
         Variables:
-          AA: AAA
-          BASIC_CAPACITY: 10B
-          BUCKET_NAME: madori-web
-          BUSINESS_CAPACITY: 2.3MB
+          BUCKET_NAME: madori-cloud-user-storage-test
+          CAPACITY_SETTING_FILE_KEY: test/capacity.json
+          SETTING_BUCKET: madori-cloud-settings
           TZ: Asia/Tokyo
-          USER_POOL_ID: ap-northeast-1_srHUAjtc2
+          USER_POOL_ID: ap-northeast-1_rGf8HWsVW
           WARNING_LIMIT: 0.9
-      Events:
-        Api:
-          Properties:
-            Method: get
-            Path: /storage/status
-            RestApiId:
-              Ref: CheckCapacityApi
-          Type: Api
-      FunctionName: CheckCapacity
+      FunctionName: LambdaVersionTest2
       Handler: index.handler
-      Role: arn:aws:iam::032500022239:role/sam_role
+      Role:
+        Ref: LambdaArn
       Runtime: nodejs8.10
-      Timeout: 30
+      Timeout: 60
     Type: AWS::Serverless::Function
-  CheckCapacityApi:
+  LambdaVersionTestPermission:
     Properties:
-      DefinitionUri: s3://codes-pc-connect/b5d235090f7b6793de3cbff182956f4f
-      MethodSettings:
-      - DataTraceEnabled: true
-        HttpMethod: '*'
-        LoggingLevel: ERROR
-        ResourcePath: /*
-      Name: madori-test
-      StageName: test
-      Variables:
-        Stage: test
-    Type: AWS::Serverless::Api
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - LambdaVersionTestPublish
+        - AliasArn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/${StageParam}/*/*
+        - ApiGatewayApi:
+            Fn::ImportValue: MadoriApi
+    Type: AWS::Lambda::Permission
+  LambdaVersionTestPublish:
+    Metadata:
+      PublishDate: aaaaaaaaa
+    Properties:
+      Alias:
+        Ref: StageParam
+      FunctionName:
+        Ref: LambdaVersionTest
+      ServiceToken:
+        Ref: PublishVersionArn
+    Type: Custom::PublishVersion
 Transform: AWS::Serverless-2016-10-31
