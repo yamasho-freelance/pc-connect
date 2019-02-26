@@ -65,11 +65,13 @@ function addTimestamp(filename) {
     var arrayOfFilename = filename.split("_");
     var lastOfStr = arrayOfFilename.pop();
 
+    console.log("lastOfStr")
+    console.log(lastOfStr)
+
     var arrayOfLastStr = lastOfStr.split(".");
     var ext = arrayOfLastStr.pop();
-    var withoutExtStr = arrayOfLastStr[0];
+    var withoutExtStr = arrayOfLastStr.join(".");
     var now = new Date().toFormat("YYYYMMDDHH24MISS");
-
 
 
     //最後尾が日付の場合日付の付け替え
